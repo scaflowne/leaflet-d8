@@ -1,0 +1,4 @@
+leaflet-custom-settings:
+  version: VERSION
+  js:
+    js/leaflet-custom-settings.js: {}
