@@ -1,1 +1,61 @@
-<?php/** * @file * Contains leafletcustomsettings.module. */use Drupal\Core\Routing\RouteMatchInterface;/** * Implements hook_entity_presave(). */function leafletcustomsettings_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {  if ($entity->bundle() == "locations") {    $location = $entity->get("field_map_location")->getValue();    $lat = isset($location[0]["lat"])? $location[0]["lat"] : "";    $lng = isset($location[0]["lng"])? $location[0]["lng"] : "";    if (!empty($lat) && !empty($lng)) {      $options = array(        "geo_type" => "Point",        "lon" => $lng,        "lat" => $lat,        "left" => $lng,        "top" => $lat,$lng,        "bottom" => $lat,        "latlon" => "{$lat},{$lng}",        "value" => "POINT ({$lng} {$lat})",      );      $entity->get('field_hidden_geocode')->setValue($options);    } else {      $entity->get('field_hidden_geocode')->setValue(array());    }  }}/** * Implements hook_form_alter(). */function leafletcustomsettings_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {  if (in_array($form_id , array("node_locations_form", "node_locations_edit_form")) ) {    $form["field_hidden_geocode"]["#access"] = false;  }}/** * Implements hook_preprocess_leaflet_map(). */function leafletcustomsettings_preprocess_leaflet_map(&$vars) {  $config = \Drupal::config('leafletcustomsettings.locationssettings')->get('disable_marketcruster_paths_loca');  $paths = explode("\r\n", $config);  $patterns = implode(PHP_EOL, $paths);  $current_path = \Drupal::service('path.current')->getPath();  $path_alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);  $path_matches = \Drupal::service('path.matcher')->matchPath($path_alias, $patterns);  if ($path_matches) {    $vars['#attached']['library'] = [];  }}
+<?php
+
+/**
+ * @file
+ * Contains leafletcustomsettings.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_entity_presave().
+ */
+function leafletcustomsettings_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity->bundle() == "locations") {
+    $location = $entity->get("field_map_location")->getValue();
+    $lat = isset($location[0]["lat"])? $location[0]["lat"] : "";
+    $lng = isset($location[0]["lng"])? $location[0]["lng"] : "";
+    if (!empty($lat) && !empty($lng)) {
+      $options = array(
+        "geo_type" => "Point",
+        "lon" => $lng,
+        "lat" => $lat,
+        "left" => $lng,
+        "top" => $lat,$lng,
+        "bottom" => $lat,
+        "latlon" => "{$lat},{$lng}",
+        "value" => "POINT ({$lng} {$lat})",
+      );
+      $entity->get('field_hidden_geocode')->setValue($options);
+    } else {
+      $entity->get('field_hidden_geocode')->setValue(array());
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function leafletcustomsettings_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if (in_array($form_id , array("node_locations_form", "node_locations_edit_form")) ) {
+    $form["field_hidden_geocode"]["#access"] = false;
+  }
+}
+
+/**
+ * Implements hook_preprocess_leaflet_map().
+ */
+function leafletcustomsettings_preprocess_leaflet_map(&$vars) {
+  $config = \Drupal::config('leafletcustomsettings.locationssettings')->get('disable_marketcruster_paths_loca');
+
+  $paths = explode("\r\n", $config);
+  $patterns = implode(PHP_EOL, $paths);
+
+  $current_path = \Drupal::service('path.current')->getPath();
+  $path_alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
+  $path_matches = \Drupal::service('path.matcher')->matchPath($path_alias, $patterns);
+
+  if ($path_matches) {
+    $vars['#attached']['library'] = [];
+  }
+}
